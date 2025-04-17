@@ -32,8 +32,5 @@ class TestTextNode(unittest.TestCase):
         node = TextNode("This is a text node", TextType.LINK, "https://www.google.com")
         self.assertEqual(node.__repr__(), 'TextNode(This is a text node, link, https://www.google.com)')
 
-
-
-
 if __name__ == "__main__":
     unittest.main()
