@@ -1,6 +1,6 @@
-import unittest
+import unittest, textwrap
 from textnode import TextNode, TextType
-from markdown_conversion import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnodes
+from markdown_conversion import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnodes, markdown_to_blocks
 
 class TestSplitNodesDelimiter(unittest.TestCase):
 
@@ -452,6 +452,91 @@ class TestTextToTextNodes(unittest.TestCase):
         self.assertEqual(nodes[9].text, "image")
         self.assertEqual(nodes[9].text_type, TextType.IMAGE)
         self.assertEqual(nodes[9].url, "https://example.com/image.jpg")
+
+class TestMarkdownToBlocks(unittest.TestCase):
+
+    def test_markdown_to_blocks(self):
+        """Test provided by the course."""
+        md = textwrap.dedent("""\
+        This is a **bolded** paragraph
+    
+        This is another paragraph with _italic_ text and `code` here
+        This is the same paragraph on a new line
+    
+        - This is a list
+        - with items
+        """)
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(
+            blocks,
+            [
+                "This is a **bolded** paragraph",
+                "This is another paragraph with _italic_ text and `code` here\nThis is the same paragraph on a new line",
+                "- This is a list\n- with items",
+            ],
+        )
+
+    def test_empty_markdown(self):
+        """Test that an empty imput will return an empty list."""
+        md = ""
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, [])
+
+    def test_whitespace_only(self):
+        """Test that whitespace only will return an empty list."""
+        md = "    \n \n\t\n  "
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, [])
+
+    def test_single_block(self):
+        """Test that a single block will simply return a list with a single element."""
+        md = "This is a single block of markdown"
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, ["This is a single block of markdown"])
+
+    expected_list = ["Block 1", "Block 2", "Block 3"]
+
+    def test_multiple_blank_lines(self):
+        """Test that multiple blank lines will give us the expected result."""
+        md = "Block 1\n\n\n\nBlock 2\n\n\nBlock 3"
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, self.expected_list)
+
+
+    def test_non_standard_line_endings(self):
+        """Test that non-standard line endings (\r, \r\n) split blocks correctly."""
+        md_old_mac = "Block 1\rBlock 2\rBlock 3"
+        md_windows = "Block 1\r\n\r\nBlock 2\r\n\r\nBlock 3"
+        blocks_old_mac = markdown_to_blocks(md_old_mac)
+        blocks_windows = markdown_to_blocks(md_windows)
+
+        self.assertEqual(blocks_old_mac, self.expected_list)
+        self.assertEqual(blocks_windows, self.expected_list)
+
+    def test_mixed_content_blocks(self):
+        """Test blocks with different markdown constructs."""
+        md = textwrap.dedent("""\
+            # Heading
+            
+            Paragraph with **bold** and _italic_.
+                             
+            ```
+            code block
+            with multiple lines
+            ```
+                             
+            > Blockquote
+            > continues here
+            
+            - List item 1
+            - List item 2
+        """)
+
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(len(blocks), 5)
+        self.assertTrue(blocks[0].startswith("# Heading"))
+        self.assertTrue(blocks[2].startswith("```"))
+        self.assertTrue(blocks[3].startswith(">"))
 
     
 

@@ -142,3 +142,22 @@ def text_to_textnodes(text):
     nodes = split_nodes_link(nodes)
 
     return nodes
+
+def markdown_to_blocks(markdown):
+    is_old_mac = '\r' in markdown and '\r\n' not in markdown
+
+    normalized = markdown.replace('\r\n', '\n').replace('\r', '\n')
+
+    if is_old_mac:
+        raw_blocks = normalized.split('\n')
+    else:
+        import re
+        raw_blocks = re.split(r'\n\s*\n', normalized)
+
+    blocks = []
+    for block in raw_blocks:
+        cleaned = block.strip()
+        if cleaned:
+            blocks.append(cleaned)
+
+    return blocks
